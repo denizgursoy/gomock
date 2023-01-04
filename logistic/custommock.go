@@ -2,7 +2,7 @@ package logistic
 
 type mockAddressService struct{}
 
-func (a mockAddressService) GetAddress(customerID int64, addressType string) *Address {
+func (a mockAddressService) GetAddress(customerID int, addressType string) *Address {
 	if customerID == 1 {
 		return &Address{"2544TT"}
 	} else if customerID == 2 {

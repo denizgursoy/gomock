@@ -7,17 +7,16 @@ const (
 )
 
 type Locator interface {
-	GetAddress(customerID int64, addressType string) *Address
+	GetAddress(customerID int, addressType string) *Address
 }
 
 type Address struct {
 	PostCode string
 }
 
-type addressService struct {
-}
+type addressService struct{}
 
-func (a addressService) GetAddress(customerID int64, addressType string) *Address {
+func (a addressService) GetAddress(customerID int, addressType string) *Address {
 	// Does its jobs and return the address
 	// Go to DB to fetch realy data
 	return &Address{}

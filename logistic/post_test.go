@@ -26,7 +26,7 @@ func TestPostService_GetPostCode(t *testing.T) {
 		defer controller.Finish()
 
 		mockLocator := NewMockLocator(controller)
-		mockLocator.EXPECT().GetAddress(int64(1), WorkAddress).Return(&Address{"2544TT"})
+		mockLocator.EXPECT().GetAddress(1, WorkAddress).Return(&Address{"2544TT"})
 
 		service := NewPostService(mockLocator)
 
@@ -40,8 +40,8 @@ func TestPostService_GetPostCode(t *testing.T) {
 		defer controller.Finish()
 
 		mockLocator := NewMockLocator(controller)
-		mockLocator.EXPECT().GetAddress(int64(2), WorkAddress).Return(nil)
-		mockLocator.EXPECT().GetAddress(int64(2), HomeAddress).Return(&Address{"1111TK"})
+		mockLocator.EXPECT().GetAddress(2, WorkAddress).Return(nil)
+		mockLocator.EXPECT().GetAddress(2, HomeAddress).Return(&Address{"1111TK"})
 
 		service := NewPostService(mockLocator)
 
@@ -57,9 +57,9 @@ func TestPostService_GetPostCode(t *testing.T) {
 		mockLocator := NewMockLocator(controller)
 
 		// Eq makes sure that first argument is equal to value
-		mockLocator.EXPECT().GetAddress(gomock.Eq(int64(2)), WorkAddress).Return(nil)
+		mockLocator.EXPECT().GetAddress(gomock.Eq(2), WorkAddress).Return(nil)
 		// Not makes sure that first argument is not equal to value
-		mockLocator.EXPECT().GetAddress(gomock.Not(int64(1)), WorkAddress).Return(nil)
+		mockLocator.EXPECT().GetAddress(gomock.Not(1), WorkAddress).Return(nil)
 		// Any is like a placeholder for the argument, it does not check value
 		mockLocator.EXPECT().GetAddress(gomock.Any(), HomeAddress).Return(nil)
 		// Nil makes sure that first argument is nil
@@ -68,10 +68,9 @@ func TestPostService_GetPostCode(t *testing.T) {
 		// It can be useful for checking size of arrays and maps arguments
 		mockLocator.EXPECT().GetAddress(gomock.Len(1), HomeAddress).Return(nil)
 		// All makes sure that argument matched by all matchers provided
-		mockLocator.EXPECT().GetAddress(gomock.All(gomock.Not(int64(1)), gomock.Not(int64(2))), HomeAddress).Return(nil)
+		mockLocator.EXPECT().GetAddress(gomock.All(gomock.Not(1), gomock.Not(2)), HomeAddress).Return(nil)
 		// AssignableToTypeOf checks if the types of the arguments matches
-		mockLocator.EXPECT().GetAddress(gomock.AssignableToTypeOf(int64(1)), HomeAddress).Return(nil)
-
+		mockLocator.EXPECT().GetAddress(gomock.AssignableToTypeOf(1), HomeAddress).Return(nil)
 	})
 
 	t.Run("custom implementation of return", func(t *testing.T) {
@@ -82,7 +81,7 @@ func TestPostService_GetPostCode(t *testing.T) {
 		mockLocator.
 			EXPECT().
 			GetAddress(gomock.Any(), gomock.Any()).
-			DoAndReturn(func(customerID int64, addressType string) *Address {
+			DoAndReturn(func(customerID int, addressType string) *Address {
 				if customerID == 1 {
 					return &Address{"2544TT"}
 				} else if customerID == 2 {
@@ -107,5 +106,21 @@ func TestPostService_GetPostCode(t *testing.T) {
 
 		// Keep the order as they are in the arguments
 		gomock.InOrder(barCall, fooCall)
+	})
+
+	t.Run("repeating the calls ", func(t *testing.T) {
+		controller := gomock.NewController(t)
+		defer controller.Finish()
+
+		mockLocator := NewMockLocator(controller)
+		// Times repeat call n times
+		// In this case, following call will/must be executed twice
+		mockLocator.EXPECT().GetAddress(gomock.Any(), gomock.Any()).Return(&Address{"1111TK"}).Times(2)
+		// For the rest of the call, following call will be executed
+		//mockLocator.EXPECT().GetAddress(gomock.Any(), gomock.Any()).Return(&Address{"2544TT"}).AnyTimes()
+
+		service := NewPostService(mockLocator)
+
+		service.GetPostCode(2)
 	})
 }

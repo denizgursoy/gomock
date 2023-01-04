@@ -8,7 +8,7 @@ func NewPostService(service addressService) PostService {
 	return PostService{service}
 }
 
-func (p PostService) getPostCode(customerID int64) string {
+func (p PostService) getPostCode(customerID int) string {
 	address := p.a.GetAddress(customerID, WorkAddress)
 	if address == nil {
 		address = p.a.GetAddress(customerID, HomeAddress)
