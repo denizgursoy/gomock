@@ -21,35 +21,6 @@ func TestPostService_GetPostCode(t *testing.T) {
 		require.Equal(t, "2544TT", code)
 	})
 
-	t.Run("should return work address if it is not nil", func(t *testing.T) {
-		controller := gomock.NewController(t)
-		defer controller.Finish()
-
-		mockLocator := NewMockLocator(controller)
-		mockLocator.EXPECT().GetAddress(1, WorkAddress).Return(&Address{"2544TT"})
-
-		service := NewPostService(mockLocator)
-
-		code := service.GetPostCode(1)
-
-		require.Equal(t, "2544TT", code)
-	})
-
-	t.Run("should return home address if work address is nil", func(t *testing.T) {
-		controller := gomock.NewController(t)
-		defer controller.Finish()
-
-		mockLocator := NewMockLocator(controller)
-		mockLocator.EXPECT().GetAddress(2, WorkAddress).Return(nil)
-		mockLocator.EXPECT().GetAddress(2, HomeAddress).Return(&Address{"1111TK"})
-
-		service := NewPostService(mockLocator)
-
-		code := service.GetPostCode(2)
-
-		require.Equal(t, "1111TK", code)
-	})
-
 	t.Run("arguments matcher", func(t *testing.T) {
 		controller := gomock.NewController(t)
 		defer controller.Finish()
@@ -115,12 +86,54 @@ func TestPostService_GetPostCode(t *testing.T) {
 		mockLocator := NewMockLocator(controller)
 		// Times repeat call n times
 		// In this case, following call will/must be executed twice
-		mockLocator.EXPECT().GetAddress(gomock.Any(), gomock.Any()).Return(&Address{"1111TK"}).Times(2)
+		mockLocator.EXPECT().GetAddress(1, gomock.Any()).Return(&Address{"1111TK"}).Times(1)
 		// For the rest of the call, following call will be executed
-		//mockLocator.EXPECT().GetAddress(gomock.Any(), gomock.Any()).Return(&Address{"2544TT"}).AnyTimes()
+		// It is expected to be called 0 or more times
+		mockLocator.EXPECT().GetAddress(2, gomock.Any()).Return(nil).AnyTimes()
+		// It is expected to be called at most twice
+		mockLocator.EXPECT().GetAddress(3, gomock.Any()).Return(nil).MaxTimes(2)
+		// It is expected to be called at least once
+		mockLocator.EXPECT().GetAddress(4, gomock.Any()).Return(nil).MinTimes(1)
 
 		service := NewPostService(mockLocator)
 
 		service.GetPostCode(2)
+	})
+}
+
+func TestPostService_GetPostCode_WithMock(t *testing.T) {
+	t.Run("should return work address if it is not nil", func(t *testing.T) {
+		controller := gomock.NewController(t)
+		defer controller.Finish()
+
+		mockLocator := NewMockLocator(controller)
+		// if you inspect the mock, you can see that it has all the methods of the interface
+		// In tests, your code will call the methods on the mocks
+		// mockLocator.GetAddress(1,WorkAddress)
+
+		mockLocator.EXPECT().GetAddress(1, WorkAddress).Return(&Address{"2544TT"})
+
+		service := NewPostService(mockLocator)
+
+		code := service.GetPostCode(1)
+
+		require.Equal(t, "2544TT", code)
+	})
+}
+
+func TestPostService_GetPostCode_TwoCalls(t *testing.T) {
+	t.Run("should return home address if work address is nil", func(t *testing.T) {
+		controller := gomock.NewController(t)
+		defer controller.Finish()
+
+		mockLocator := NewMockLocator(controller)
+		mockLocator.EXPECT().GetAddress(2, WorkAddress).Return(nil)
+		mockLocator.EXPECT().GetAddress(2, HomeAddress).Return(&Address{"1111TK"})
+
+		service := NewPostService(mockLocator)
+
+		code := service.GetPostCode(2)
+
+		require.Equal(t, "1111TK", code)
 	})
 }
